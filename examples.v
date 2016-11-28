@@ -11,8 +11,8 @@ Section examples.
   (λ: "f", let: "l" := Alloc #0 in "f" #();; !"l")%E.
 
  Lemma wp_local_state (f : val) : ∀ P Φ,
-  {{ heap_ctx ★ {{ P }} f #() {{ Φ }} ★ P }}
-  local_state f {{v, v = #0 ★ ∃ w, Φ w}}.
+  {{ heap_ctx ∗ {{ P }} f #() {{ Φ }} ∗ P }}
+  local_state f {{v, v = #0 ∗ ∃ w, Φ w}}.
  Proof.
   iIntros (P Φ) "!# (#Hctx & Hf & HP)". unfold local_state.
   wp_value. wp_let.
@@ -25,9 +25,9 @@ Section examples.
   (λ: "f", let: "l" := Alloc #0 in λ: <>, "f" #();; !"l")%E.
 
  Lemma wp_local_state_lifted (f : val) : ∀ P Φ,
-  heap_ctx ★ {{ P }} f #() {{ Φ }} ⊢
+  heap_ctx ∗ {{ P }} f #() {{ Φ }} ⊢
   {{ True }} (local_state_lifted f)
-   {{v, {{P}} (of_val v) #() {{u, u = #0 ★ ∃ w, Φ w}} }}.
+   {{v, {{P}} (of_val v) #() {{u, u = #0 ∗ ∃ w, Φ w}} }}.
  Proof.
   iIntros (P Φ) "[#Hctx #Hf]!# _". unfold local_state_lifted.
   wp_lam. wp_alloc l as "Hl".
@@ -48,7 +48,7 @@ Section examples.
   heap_ctx ⊢
   {{ True }} shared_state
    {{v, ∀ (f : val) P Φ,
-        {{ {{ P }} f #() {{ Φ }} ★ P}} (of_val v) f {{u, u = #0 ★ ∃ w, Φ w}}
+        {{ {{ P }} f #() {{ Φ }} ∗ P}} (of_val v) f {{u, u = #0 ∗ ∃ w, Φ w}}
    }}.
  Proof.
   iIntros "#Hctx !# _". unfold shared_state.
@@ -101,8 +101,8 @@ Section Contradiction.
   ∀ Σ {Hhp : heapG Σ},
   heap_ctx ⊢
   {{ True }} shared_state_ZO
-   {{v, ∀ (f : val) P Φ,
-        {{ {{ P }} f #() {{ Φ }} ★ P}} (of_val v) f {{u, u = #1 ★ ∃ w, Φ w}}
+   {{v, ∀ (f : val) P,
+        {{ {{ P }} f #() {{_, P }} ∗ P}} (of_val v) f {{u, u = #1 ∗ P}}
    }}.
 
  Lemma wp_shared_state_ZO_2 :
@@ -124,11 +124,11 @@ Section Contradiction.
     wp_bind (g _).
     iApply wp_wand_r; iSplitL.
     + iApply ("Hg" $! (λ: "x", "x")%V True%I with "[Hg'']").
-      iSplit; last done. iIntros "!# _"; done.
+      iSplit; last done. iIntros "!# _". iApply wp_wand_r; iSplitL; auto.
     + iIntros (w) "[Hw _]"; by wp_seq.
   - iApply wp_wand_r; iSplitL.
     iApply ("Hg" $! (λ: <>, g (λ: "x", "x") ;; #())%V True%I with "[]").
-    iSplit; last done. iIntros "!# _"; done.
+    iSplit; last done. iIntros "!# _". iApply wp_wand_r; iSplitL; auto.
     iIntros (w) "[Hw _]"; done.
  Qed.
 
@@ -154,7 +154,7 @@ Section Contradiction.
     wp_bind (g _).
     iApply wp_wand_r; iSplitL.
     + iApply ("Hg" $! (λ: "x", "x")%V True%I with "[Hg'']").
-      iSplit; last done. iIntros "!# _"; done.
+      iSplit; last done. iIntros "!# _". iApply wp_wand_r; iSplitL; auto.
     + iIntros (w) "[Hw _]"; by wp_seq.
   - wp_bind (Fork _).
     iApply wp_wand_r; iSplitL.
@@ -162,12 +162,12 @@ Section Contradiction.
       iNext; iSplit; first done.
       iApply wp_wand_r; iSplitL.
       iApply ("Hg" $! (λ: <>, g (λ: "x", "x") ;; #())%V True%I with "[]").
-      iSplit; last done. iIntros "!# _"; done.
+      iSplit; last done. iIntros "!# _". iApply wp_wand_r; iSplitL; auto.
       iIntros (w) "[Hw _]"; done.
     + iIntros (w) "Hw". wp_seq.
       iApply wp_wand_r; iSplitL.
       iApply ("Hg" $! (λ: <>, g (λ: "x", "x") ;; #())%V True%I with "[]").
-      iSplit; last done. iIntros "!# _"; done.
+      iSplit; last done. iIntros "!# _". iApply wp_wand_r; iSplitL; auto.
       iIntros (w') "[Hw' _]"; done.
  Qed.
 
